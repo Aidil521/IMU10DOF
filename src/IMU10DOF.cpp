@@ -1,14 +1,5 @@
 #include "IMU10DOF.h"
 
-/* Wrap an angle in the range [-limit,+limit] (special thanks to Edgar Bonet!) */
-static float wrap(float angle,float limit){
-  while (angle >  limit) angle -= 2*limit;
-  while (angle < -limit) angle += 2*limit;
-  return angle;
-}
-
-/* INIT and BASIC FUNCTIONS */
-
 IMUSensor::IMUSensor(TwoWire &w){
   wire = &w;
   setGyroOffsets(0,0,0);
@@ -221,6 +212,13 @@ void IMUSensor::calcDataBMP(){
   Pressure = p / 256.0f / 100.0f;
 
   Altitude = (((float)powf(1013.23f / Pressure, 0.190223f) - 1.0f) * (TempB + 273.15f) / 0.0065f) - startAltitude;
+}
+
+/* Wrap an angle in the range [-limit,+limit] (special thanks to Edgar Bonet!) */
+static float wrap(float angle,float limit){
+  while (angle >  limit) angle -= 2*limit;
+  while (angle < -limit) angle += 2*limit;
+  return angle;
 }
 
 IMUSensor IMU;
