@@ -1,0 +1,38 @@
+#######################################
+# Syntax Coloring Map For IMU10DOF
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+IMU10DOF	KEYWORD1
+IMU		KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+setGyroOffsets	KEYWORD2
+setAccOffsets	KEYWORD2
+getGyroXoffset	KEYWORD2
+getGyroYoffset	KEYWORD2
+getGyroZoffset	KEYWORD2
+getAccXoffset	KEYWORD2
+getAccYoffset	KEYWORD2
+getAccZoffset	KEYWORD2
+
+getAngleX	KEYWORD2
+getAngleY	KEYWORD2
+getAngleZ	KEYWORD2
+getTemp		KEYWORD2
+
+getAzimuth	KEYWORD2
+getHeading	KEYWORD2
+
+getAltitude	KEYWORD2
+getPressure	KEYWORD2
+
+#######################################
+# (end)
+#######################################
