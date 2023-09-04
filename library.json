@@ -1,0 +1,18 @@
+{
+  "name": "IMU10DOF",
+  "keywords": "Measurement Sensor, IMU 10-Dof",
+  "description": "A implementation of measurement sensor IMU 10-Dof.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Aidil011215/IMU10DOF.git"
+  },
+  "version": "0.0.1",
+  "authors": {
+    "name": "Aidil011215",
+    "url": ""
+  },
+  "exclude": [
+  ],
+  "frameworks": "arduino",
+  "platforms": "*"
+}
