@@ -143,6 +143,13 @@ void IMUSensor::update(){
   this->calcDataBMP();
 }
 
+/* Wrap an angle in the range [-limit,+limit] (special thanks to Edgar Bonet!) */
+float wrap(float angle,float limit){
+  while (angle >  limit) angle -= 2*limit;
+  while (angle < -limit) angle += 2*limit;
+  return angle;
+}
+
 void IMUSensor::calcDataMPU(){  // reference https://github.com/rfetick/MPU6050_light.git
   // retrieve raw data
   this->readMPU(MPU6050_ACCEL_OUT_REGISTER, 14);
@@ -151,6 +158,8 @@ void IMUSensor::calcDataMPU(){  // reference https://github.com/rfetick/MPU6050_
 	  rawAG[i]  = wire->read() << 8;
     rawAG[i] |= wire->read();
   }
+  float dt = (millis() - preInterval) * 1e-3f;
+
   accX = ((float)rawAG[0]) / 4096.0f - accXoffset;
   accY = ((float)rawAG[1]) / 4096.0f - accYoffset;
   accZ = ((float)rawAG[2]) / 4096.0f - accZoffset;
@@ -163,8 +172,6 @@ void IMUSensor::calcDataMPU(){  // reference https://github.com/rfetick/MPU6050_
   float sgZ = accZ<0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
   angleAccX = atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
   angleAccY = -atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG; // [- 180,+ 180] deg
-
-  float dt = (millis() - preInterval) * 1e-3f;
 
   angleX = wrap(0.98f*(angleAccX + wrap(angleX + gyroX*dt - angleAccX, 180)) + (1.0f-0.98f)*angleAccX, 180);
   angleY = wrap(0.98f*(angleAccY + wrap(angleY + gyroY*dt - angleAccY, 180)) + (1.0f-0.98f)*angleAccY, 180);
@@ -210,13 +217,6 @@ void IMUSensor::calcDataBMP(){  // reference https://github.com/MartinL1/BMP280_
   Pressure = p / 256.0f / 100.0f;
 
   Altitude = (((float)powf(1013.23f / Pressure, 0.190223f) - 1.0f) * (TempB + 273.15f) / 0.0065f) - startAltitude;
-}
-
-/* Wrap an angle in the range [-limit,+limit] (special thanks to Edgar Bonet!) */
-static float wrap(float angle,float limit){
-  while (angle >  limit) angle -= 2*limit;
-  while (angle < -limit) angle += 2*limit;
-  return angle;
 }
 
 IMUSensor IMU;
