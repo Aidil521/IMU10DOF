@@ -1,7 +1,6 @@
 #ifndef IMU_10DOF_H
 #define IMU_10DOF_H
 
-
 #include "Wire.h"
 #include "Arduino.h"
 

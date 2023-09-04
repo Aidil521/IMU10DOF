@@ -1,5 +1,11 @@
 #include "IMU10DOF.h"
 
+/* Library Reference
+  https://github.com/rfetick/MPU6050_light.git
+  https://github.com/mprograms/QMC5883LCompass.git
+  https://github.com/MartinL1/BMP280_DEV.git
+ */
+
 IMUSensor::IMUSensor(TwoWire &w){
   wire = &w;
   setGyroOffsets(0,0,0);
@@ -9,6 +15,7 @@ IMUSensor::IMUSensor(TwoWire &w){
 void IMUSensor::begin(){
   wire->begin();
   wire->setClock(400000);
+
   // Configuration MPU6050
   uint8_t statusMPU = writeData(MPU6050_ADDR, MPU6050_PWR_MGMT_1_REGISTER, 0x01); 
   writeData(MPU6050_ADDR, MPU6050_SMPLRT_DIV_REGISTER, 0x00);
@@ -34,7 +41,7 @@ void IMUSensor::begin(){
   this->calcDataMPU();
   angleX = angleAccX;
   angleY = angleAccY;
-  preInterval = millis(); // may cause lack of angular accuracy if begin() is much before the first update()
+  preInterval = millis(); 
 }
 
 uint8_t IMUSensor::writeData(uint8_t add, uint8_t reg, uint8_t data){
@@ -79,7 +86,6 @@ void IMUSensor::readBMP(uint8_t reg, uint8_t* data, int16_t bitData) {
 	}
 }
 
-/* SETTER */
 void IMUSensor::setGyroOffsets(float x, float y, float z){
   gyroXoffset = x;
   gyroYoffset = y;
@@ -137,7 +143,7 @@ void IMUSensor::update(){
   this->calcDataBMP();
 }
 
-void IMUSensor::calcDataMPU(){
+void IMUSensor::calcDataMPU(){  // reference https://github.com/rfetick/MPU6050_light.git
   // retrieve raw data
   this->readMPU(MPU6050_ACCEL_OUT_REGISTER, 14);
   int16_t rawAG[7]; // [ax,ay,az,temp,gx,gy,gz]
@@ -160,21 +166,13 @@ void IMUSensor::calcDataMPU(){
 
   float dt = (millis() - preInterval) * 1e-3f;
 
-  // Correctly wrap X and Y angles (special thanks to Edgar Bonet!)
-  // https://github.com/gabriel-milan/TinyIMUSensor/issues/6
   angleX = wrap(0.98f*(angleAccX + wrap(angleX + gyroX*dt - angleAccX, 180)) + (1.0f-0.98f)*angleAccX, 180);
   angleY = wrap(0.98f*(angleAccY + wrap(angleY + gyroY*dt - angleAccY, 180)) + (1.0f-0.98f)*angleAccY, 180);
   angleZ += gyroZ*dt; // not wrapped
   preInterval = millis();
 }
-/**
-	GET AZIMUTH
-	Calculate the azimuth (in degrees);
-	
-	@since v0.1;
-	@return int azimuth
-**/
-void IMUSensor::calcDataQMC(){
+
+void IMUSensor::calcDataQMC(){  // reference https://github.com/mprograms/QMC5883LCompass.git
   float rawMG[6];
   this->readQMC(QMC5883L_OUT_REGISTER, 6);
   for(uint8_t i = 0; i < 3; i++){
@@ -186,10 +184,10 @@ void IMUSensor::calcDataQMC(){
 	Heading = (h < (-1790)) ? ((h / 10.0f) + 360) : (h / 10.0f);
 }
 
-void IMUSensor::calcDataBMP(){
+void IMUSensor::calcDataBMP(){  // reference https://github.com/MartinL1/BMP280_DEV.git
   uint8_t data[6];
   this->readBMP(BMP280_PRES_MSB, &data[0], 6);
-  int32_t adcTemp = (int32_t)data[3] << 12 | (int32_t)data[4] << 4 | (int32_t)data[5] >> 4;  // Copy the temperature and pressure data into the adc variables
+  int32_t adcTemp = (int32_t)data[3] << 12 | (int32_t)data[4] << 4 | (int32_t)data[5] >> 4; 
 	int32_t adcPres = (int32_t)data[0] << 12 | (int32_t)data[1] << 4 | (int32_t)data[2] >> 4;
     
   int32_t vaT1 = ((((adcTemp >> 3) - ((int32_t)params.dig_T1 << 1))) * ((int32_t)params.dig_T2)) >> 11;
