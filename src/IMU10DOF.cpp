@@ -158,7 +158,6 @@ void IMUSensor::calcDataMPU(){  // reference https://github.com/rfetick/MPU6050_
 	  rawAG[i]  = wire->read() << 8;
     rawAG[i] |= wire->read();
   }
-  float dt = (millis() - preInterval) * 1e-3f;
 
   accX = ((float)rawAG[0]) / 4096.0f - accXoffset;
   accY = ((float)rawAG[1]) / 4096.0f - accYoffset;
@@ -168,6 +167,7 @@ void IMUSensor::calcDataMPU(){  // reference https://github.com/rfetick/MPU6050_
   gyroY = ((float)rawAG[5]) / 131.0f - gyroYoffset;
   gyroZ = ((float)rawAG[6]) / 131.0f - gyroZoffset;
   
+  float dt = (millis() - preInterval) * 1e-3f;
   // estimate tilt angles: this is an approximation for small angles!
   float sgZ = accZ<0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
   angleAccX = atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
