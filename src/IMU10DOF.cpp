@@ -51,7 +51,7 @@ uint8_t IMUSensor::writeByte(uint8_t add, uint8_t reg, uint8_t data){
   wire->write(reg);
   wire->write(data);
   uint8_t status = wire->endTransmission();
-  return status; // 0 if success
+  return status; 
 }
 
 uint8_t IMUSensor::readByte(uint8_t add, uint8_t reg) {
