@@ -1,11 +1,11 @@
-#include "IMU10DOF.h"
-
 /* Library Reference
   https://github.com/rfetick/MPU6050_light.git
   https://github.com/mprograms/QMC5883LCompass.git
   https://github.com/MartinL1/BMP280_DEV.git
   https://github.com/jarzebski/Arduino-KalmanFilter.git
  */
+
+#include "IMU10DOF.h"
 
 IMUSensor::IMUSensor(TwoWire &w){
   wire = &w;
@@ -60,7 +60,7 @@ uint8_t IMUSensor::readByte(uint8_t add, uint8_t reg) {
   wire->endTransmission(false);
   wire->requestFrom(add, (uint8_t)1);
   int data = wire->read(); 
-	return data;
+  return data;
 }
 
 void IMUSensor::readMPU(uint8_t reg, int bitData) {
