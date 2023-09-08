@@ -15,7 +15,7 @@ void loop() {
   IMU.update(); //update measurement IMU Sensor
 
   if ((millis() - oldT) > 500) {
-    oldT    = millis();
+    oldT = millis();
 
     //read angle x, y, z
     Roll  = IMU.getAngleX();
@@ -23,9 +23,9 @@ void loop() {
     Yaw   = IMU.getAngleZ(); 
 
     //Display for serial monitor
-    Serial.println("Roll    : " + String(Roll));
-    Serial.println("Pitch   : " + String(Pitch));
-    Serial.println("Yaw     : " + String(Yaw));
+    Serial.println("Roll  : " + String(Roll));
+    Serial.println("Pitch : " + String(Pitch));
+    Serial.println("Yaw   : " + String(Yaw));
     Serial.println();
   }
 }
