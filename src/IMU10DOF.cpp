@@ -191,8 +191,7 @@ void IMUSensor::update(){
   this->calcDataBMP();
 }
 
-void IMUSensor::calcDataMPU() {  
-  // retrieve raw data
+void IMUSensor::calcDataMPU() {
   int16_t rawAG[7]; // [ax,ay,az,temp,gx,gy,gz]
   readMPU(MPU6050_ACCEL_OUT_REGISTER, 14);
   for(uint8_t i = 0; i < 7; i++){
@@ -239,7 +238,7 @@ void IMUSensor::calcDataBMP() {
   readBMP(BMP280_PRES_MSB, data, 6);
   int32_t adcTemp = (int32_t)data[3] << 12 | (int32_t)data[4] << 4 | (int32_t)data[5] >> 4; 
 	int32_t adcPres = (int32_t)data[0] << 12 | (int32_t)data[1] << 4 | (int32_t)data[2] >> 4;
-    
+
   int32_t vaT1 = ((((adcTemp >> 3) - ((int32_t)params.dig_T1 << 1))) * ((int32_t)params.dig_T2)) >> 11;
   int32_t vaT2 = (((((adcTemp >> 4) - ((int32_t)params.dig_T1)) * ((adcTemp >> 4) - ((int32_t)params.dig_T1))) >> 12) * ((int32_t)params.dig_T3)) >> 14;
   int32_t t_fine = vaT1 + vaT2;
