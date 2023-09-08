@@ -4,13 +4,14 @@
   https://github.com/rfetick/MPU6050_light.git
   https://github.com/mprograms/QMC5883LCompass.git
   https://github.com/MartinL1/BMP280_DEV.git
+  https://github.com/jarzebski/Arduino-KalmanFilter.git
  */
 
 IMUSensor::IMUSensor(TwoWire &w){
   wire = &w;
   setGyroOffsets(0,0,0);
   setAccOffsets(0,0,0);
-  setFilter();
+  // setFilter();
 }
 
 void IMUSensor::begin(){
@@ -21,14 +22,14 @@ void IMUSensor::begin(){
   uint8_t statusMPU = writeByte(MPU6050_ADDR, MPU6050_PWR_MGMT_1_REGISTER, 0x01); 
   writeByte(MPU6050_ADDR, MPU6050_SMPLRT_DIV_REGISTER, 0x00);
   writeByte(MPU6050_ADDR, MPU6050_CONFIG_REGISTER, 0x00);
-  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x18); //16384.0f
-  writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x00); //16.4f
-  delay(100);
+  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x08); //65.5f
+  writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x00); //16384.0f
+  delay(10);
 
   // Configuration QMC5883L
   uint8_t statusQMC = writeByte(QMC5883L_ADDR, QMC5583L_CONFIG_REGISTER, 0x01);
   writeByte(QMC5883L_ADDR, QMC5883L_MODE_REGISTER, 0x01 | 0x0C | 0x10 | 0x00);
-  delay(100);
+  delay(10);
 
   // Configuration BMP280
   if (readByte(BMP280_ADDR, BMP280_MDICE_ID) != DEVICE_ID);
@@ -37,7 +38,7 @@ void IMUSensor::begin(){
   readBMP(BMP280_TRIM_PARAMS, (uint8_t *)&params ,sizeof(params));
   uint8_t statusBMP = writeByte(BMP280_ADDR, BMP280_CONFIG_REGISTER, 0xC0 | 0x00);
   writeByte(BMP280_ADDR, BMP280_CTRL_REGISTER, 0x20 | 0x14 | 0x03);
-  delay(100);
+  delay(10);
 
   this->update();
   angleX = angleAccX;
@@ -87,6 +88,12 @@ void IMUSensor::readBMP(uint8_t reg, uint8_t* data, int16_t bitData) {
 	}
 }
 
+static float wrap(float angle,float limit){
+  while (angle >  limit) angle -= 360;
+  while (angle < -limit) angle += 360;
+  return angle;
+}
+
 void IMUSensor::setGyroOffsets(float x, float y, float z){
   gyroXoffset = x;
   gyroYoffset = y;
@@ -99,38 +106,38 @@ void IMUSensor::setAccOffsets(float x, float y, float z){
   accZoffset = z;
 }
 
-void IMUSensor::setFilter(float angle, float bias, float mea) {
-  Q_angle = angle;
-  Q_bias  = bias;
-  R_measure = mea;
-}
+// void IMUSensor::setFilter(float angle, float bias, float mea) {
+//   Q_angle = angle;
+//   Q_bias  = bias;
+//   R_measure = mea;
+// }
 
-float IMUSensor::Filter(float newValue, float newRate, float dt, uint8_t ar) {
-  K_rate[ar] = newRate - K_bias[ar];
-  K_angle[ar] += dt * K_rate[ar];
+// float IMUSensor::Filter(float newValue, float newRate, float dt, uint8_t ar) {
+//   K_rate[ar] = newRate - K_bias[ar];
+//   K_angle[ar] += dt * K_rate[ar];
 
-  P[0][ar] += dt * (dt * P[3][ar] - P[1][ar] - P[2][ar] + Q_angle);
-  P[1][ar] -= dt * P[3][ar];
-  P[2][ar] -= dt * P[3][ar];
-  P[3][ar] += Q_bias * dt;
+//   P[0][ar] += dt * (dt * P[3][ar] - P[1][ar] - P[2][ar] + Q_angle);
+//   P[1][ar] -= dt * P[3][ar];
+//   P[2][ar] -= dt * P[3][ar];
+//   P[3][ar] += Q_bias * dt;
 
-  Sum[ar] = P[0][ar] + R_measure;
+//   Sum[ar] = P[0][ar] + R_measure;
 
-  K[0][ar] = P[0][ar] / Sum[ar];
-  K[1][ar] = P[2][ar] / Sum[ar];
+//   K[0][ar] = P[0][ar] / Sum[ar];
+//   K[1][ar] = P[2][ar] / Sum[ar];
 
-  err[ar] = newValue - K_angle[ar];
+//   err[ar] = newValue - K_angle[ar];
 
-  K_angle[ar] += K[0][ar] * err[ar];
-  K_bias[ar] += K[1][ar] * err[ar];
+//   K_angle[ar] += K[0][ar] * err[ar];
+//   K_bias[ar] += K[1][ar] * err[ar];
 
-  P[0][ar] -= K[0][ar] * P[0][ar];
-  P[1][ar] -= K[0][ar] * P[1][ar];
-  P[2][ar] -= K[1][ar] * P[0][ar];
-  P[3][ar] -= K[1][ar] * P[1][ar];
+//   P[0][ar] -= K[0][ar] * P[0][ar];
+//   P[1][ar] -= K[0][ar] * P[1][ar];
+//   P[2][ar] -= K[1][ar] * P[0][ar];
+//   P[3][ar] -= K[1][ar] * P[1][ar];
 
-  return K_angle[ar];
-}
+//   return wrap(K_angle[ar], 180);
+// }
 
 void IMUSensor::calcOffsets(bool _offsetMPU, bool _offsetQMC, bool _offsetBMP) {
   if (_offsetMPU == true) {
@@ -184,7 +191,7 @@ void IMUSensor::update(){
   this->calcDataBMP();
 }
 
-void IMUSensor::calcDataMPU() {  // reference https://github.com/rfetick/MPU6050_light.git
+void IMUSensor::calcDataMPU() {  
   // retrieve raw data
   int16_t rawAG[7]; // [ax,ay,az,temp,gx,gy,gz]
   readMPU(MPU6050_ACCEL_OUT_REGISTER, 14);
@@ -195,43 +202,41 @@ void IMUSensor::calcDataMPU() {  // reference https://github.com/rfetick/MPU6050
 
   accX  = ((float)rawAG[0]) / 16384.0f - accXoffset;
   accY  = ((float)rawAG[1]) / 16384.0f - accYoffset;
-  accZ  = ((float)rawAG[2]) / 16384.0f - accZoffset;
+  accZ  = (!upsideDownMounting - upsideDownMounting) * ((float)rawAG[2]) / 16384.0f - accZoffset;
   temp  = (rawAG[3] / TEMP_LSB_2_DEGREE) + TEMP_LSB_OFFSET;
-  gyroX = ((float)rawAG[4]) / 16.4f  - gyroXoffset;
-  gyroY = ((float)rawAG[5]) / 16.4f  - gyroYoffset;
-  gyroZ = ((float)rawAG[6]) / 16.4f  - gyroZoffset;
+  gyroX = ((float)rawAG[4]) / 65.5f - gyroXoffset;
+  gyroY = ((float)rawAG[5]) / 65.5f - gyroYoffset;
+  gyroZ = ((float)rawAG[6]) / 65.5f - gyroZoffset;
   
-  // static float sgZ = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
-  angleAccX = atan2(accY, sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
-  angleAccY = -atan2(accX, sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG; // [- 180,+ 180] deg
+  float sgZ = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
+  angleAccX = atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
+  angleAccY = -atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG; // [- 180,+ 180] deg
 
   // estimate tilt angles: this is an approximation for small angles!
   float _dt = (micros() - preInterval) * 1e-6f;
-  // angleX = ((0.02f * angleAccX) + 0.98f * gyroX * _dt) * (1.0f / (1.0f - 0.98f));
-  // angleY = ((0.02f * angleAccY) + 0.98f * gyroY * _dt) * (1.0f / (1.0f - 0.98f));
-  angleX = Filter(angleAccX, gyroX, _dt, 0x05 >> 3);
-  angleY = Filter(angleAccY, gyroY, _dt, 0x05 >> 2);
-  angleZ += gyroZ*_dt * (-1);
-  if (angleZ > 180) {angleZ -= 360;}
-  if (angleZ < -180) {angleZ += 360;}
+  // angleX = Filter(angleAccX, gyroX, _dt, 5 >> 3);
+  // angleY = Filter(angleAccY, gyroY, _dt, 5 >> 2);
+  // angleZ = Filter(Heading  , gyroZ, _dt, 5 >> 1);
+  angleX = wrap(0.98f * (angleAccX + wrap(angleX + gyroX * _dt - angleAccX, 180)) + 0.02f * angleAccX, 180);
+  angleY = wrap(0.98f * (angleAccY + wrap(angleY + gyroY * _dt - angleAccY, 180)) + 0.02f * angleAccY, 180);
+  angleZ = wrap(0.98f * (Heading   + wrap(angleZ + gyroZ * _dt - Heading,   180)) + 0.02f * Heading,   180);
   preInterval = micros();
 }
 
-void IMUSensor::calcDataQMC() {  // reference https://github.com/mprograms/QMC5883LCompass.git
+void IMUSensor::calcDataQMC() {  
   float rawMG[6];
   readQMC(QMC5883L_OUT_REGISTER, 6);
   for(uint8_t i = 0; i < 3; i++){
     rawMG[i] = (int)(int16_t)(wire->read() | wire->read() << 8);
   }
 	float a = (atan2(rawMG[1], rawMG[0]) * RAD_2_DEG) + _declination;
-	float h = a - startHeading;
 	Azimuth = a < 0 ? 360 + a : a;
-	Heading = (h > 180) ? h - 360 : h;
+	Heading = wrap(a - startHeading, 180);
 }
 
-void IMUSensor::calcDataBMP() {  // reference https://github.com/MartinL1/BMP280_DEV.git
+void IMUSensor::calcDataBMP() {  
   uint8_t data[6];
-  readBMP(BMP280_PRES_MSB, &data[0], 6);
+  readBMP(BMP280_PRES_MSB, data, 6);
   int32_t adcTemp = (int32_t)data[3] << 12 | (int32_t)data[4] << 4 | (int32_t)data[5] >> 4; 
 	int32_t adcPres = (int32_t)data[0] << 12 | (int32_t)data[1] << 4 | (int32_t)data[2] >> 4;
     
