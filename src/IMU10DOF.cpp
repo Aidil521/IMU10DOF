@@ -220,12 +220,6 @@ void IMUSensor::calcDataMPU() {  // reference https://github.com/rfetick/MPU6050
   if (angleZ > 180) {angleZ -= 360;}
   if (angleZ < -180) {angleZ += 360;}
   preInterval = micros();
-  // angleX = wrap(0.98f*(angleAccX + wrap(angleX + gyroX*_dt - angleAccX, 180)) + (1.0f-0.98f)*angleAccX, 180);
-  // angleY = wrap(0.98f*(angleAccY + wrap(angleY + gyroY*_dt - angleAccY, 180)) + (1.0f-0.98f)*angleAccY, 180);
-  // angleZ += gyroZ*_dt * (-1);
-  // if (angleZ > 180) {angleZ -= 360;}
-  // if (angleZ < -180) {angleZ += 360;}
-  // preInterval = micros();
 }
 
 void IMUSensor::calcDataQMC() {  // reference https://github.com/mprograms/QMC5883LCompass.git
