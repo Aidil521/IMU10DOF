@@ -89,8 +89,6 @@ class IMUSensor {
 	float Q_angle, Q_bias, R_measure;
 	float K_angle[2], K_bias[2], K_rate[2], Sum[2], err[2];
 	float P[4][2], K[2][2];
-	float _err_measure, _err_estimate, _q;
-	float _last_estimate = 0;
     struct {
         uint16_t dig_T1;
         int16_t  dig_T2;
