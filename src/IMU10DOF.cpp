@@ -38,7 +38,7 @@ void IMUSensor::begin(){
   readBMP(BMP280_TRIM_PARAMS, (uint8_t *)&params ,sizeof(params));
   uint8_t statusBMP = writeByte(BMP280_ADDR, BMP280_CONFIG_REGISTER, 0xC0 | 0x00);
   writeByte(BMP280_ADDR, BMP280_CTRL_REGISTER, 0x20 | 0x14 | 0x03);
-  delay(10);
+  delay(100);
 
   this->update();
   angleX = angleAccX;
