@@ -32,7 +32,7 @@
 #define RAD_2_DEG                     57.29578f // [deg/rad]
 #define CALIB_OFFSET_NB_MES           200
 #define TEMP_LSB_2_DEGREE             340.0f    // [bit/celsius]
-#define TEMP_LSB_OFFSET               12412.0f  
+#define TEMP_LSB_OFFSET               36.53f//12412.0f  
 
 class IMUSensor {
     public:
@@ -42,7 +42,7 @@ class IMUSensor {
     void setDeclination(int16_t degree, uint8_t minute, char dir);
     void setGyroOffsets(float x, float y, float z);
 	void setAccOffsets(float x, float y, float z);
-    void setFilter(float angle = 0.001f, float bias = 0.003f, float mea = 0.03f);
+    void setFilter(float angle = 0.003f, float bias = 0.006f, float mea = 0.06f);
     float Filter(float newValue, float newRate, float dt, uint8_t ar);
 	void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
 

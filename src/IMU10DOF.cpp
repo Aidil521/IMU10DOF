@@ -21,8 +21,8 @@ void IMUSensor::begin(){
   uint8_t statusMPU = writeByte(MPU6050_ADDR, MPU6050_PWR_MGMT_1_REGISTER, 0x01); 
   writeByte(MPU6050_ADDR, MPU6050_SMPLRT_DIV_REGISTER, 0x00);
   writeByte(MPU6050_ADDR, MPU6050_CONFIG_REGISTER, 0x00);
-  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x00);
-  writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x10);
+  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x18); //16384.0f
+  writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x00); //16.4f
   delay(100);
 
   // Configuration QMC5883L
@@ -137,7 +137,7 @@ void IMUSensor::calcOffsets(bool _offsetMPU, bool _offsetQMC, bool _offsetBMP) {
     setGyroOffsets(0,0,0);
     setAccOffsets(0,0,0);
     float ag[6] = {0,0,0,0,0,0}; // 3*acc, 3*gyro
-    for(int i = 0; i < CALIB_OFFSET_NB_MES; i++){
+    for(uint8_t i = 0; i < CALIB_OFFSET_NB_MES; i++){
       this->calcDataMPU();
       ag[0] += accX;
       ag[1] += accY;
@@ -193,20 +193,22 @@ void IMUSensor::calcDataMPU() {  // reference https://github.com/rfetick/MPU6050
     rawAG[i] |= wire->read();
   }
 
-  accX  = ((float)rawAG[0]) / 4096.0f - accXoffset;
-  accY  = ((float)rawAG[1]) / 4096.0f - accYoffset;
-  accZ  = ((float)rawAG[2]) / 4096.0f - accZoffset;
-  temp  = (rawAG[3] + TEMP_LSB_OFFSET) / TEMP_LSB_2_DEGREE;
-  gyroX = ((float)rawAG[4]) / 131.0f  - gyroXoffset;
-  gyroY = ((float)rawAG[5]) / 131.0f  - gyroYoffset;
-  gyroZ = ((float)rawAG[6]) / 131.0f  - gyroZoffset;
+  accX  = ((float)rawAG[0]) / 16384.0f - accXoffset;
+  accY  = ((float)rawAG[1]) / 16384.0f - accYoffset;
+  accZ  = ((float)rawAG[2]) / 16384.0f - accZoffset;
+  temp  = (rawAG[3] / TEMP_LSB_2_DEGREE) + TEMP_LSB_OFFSET;
+  gyroX = ((float)rawAG[4]) / 16.4f  - gyroXoffset;
+  gyroY = ((float)rawAG[5]) / 16.4f  - gyroYoffset;
+  gyroZ = ((float)rawAG[6]) / 16.4f  - gyroZoffset;
   
-  // estimate tilt angles: this is an approximation for small angles!
-  float sgZ = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
-  angleAccX = atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
-  angleAccY = -atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG; // [- 180,+ 180] deg
+  // static float sgZ = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
+  angleAccX = atan2(accY, sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG; // [-180,+180] deg
+  angleAccY = -atan2(accX, sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG; // [- 180,+ 180] deg
 
+  // estimate tilt angles: this is an approximation for small angles!
   float _dt = (micros() - preInterval) * 1e-6f;
+  // angleX = ((0.02f * angleAccX) + 0.98f * gyroX * _dt) * (1.0f / (1.0f - 0.98f));
+  // angleY = ((0.02f * angleAccY) + 0.98f * gyroY * _dt) * (1.0f / (1.0f - 0.98f));
   angleX = Filter(angleAccX, gyroX, _dt, 0x05 >> 3);
   angleY = Filter(angleAccY, gyroY, _dt, 0x05 >> 2);
   angleZ += gyroZ*_dt * (-1);
