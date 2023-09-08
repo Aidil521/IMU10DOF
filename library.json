@@ -1,6 +1,6 @@
 {
   "name": "IMU10DOF",
-  "keywords": "Measurement Sensor, IMU 10-Dof",
+  "keywords": "Sensor, MPU6050, QMC5883L, BMP280, AHRS, IMU 10-Dof",
   "description": "A implementation of measurement sensor IMU 10-Dof.",
   "repository": {
     "type": "git",
