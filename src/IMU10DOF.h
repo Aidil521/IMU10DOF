@@ -42,7 +42,7 @@ class IMUSensor {
     void setDeclination(int16_t degree, uint8_t minute, char dir);
     void setGyroOffsets(float x, float y, float z);
 	void setAccOffsets(float x, float y, float z);
-    // void setFilter(float angle = 0.005f, float bias = 0.008f, float mea = 0.08f);
+    // void setFilter(float angle = 0.001f, float bias = 0.003f, float mea = 0.03f);
     // float Filter(float newValue, float newRate, float dt, uint8_t ar);
 	void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
 
