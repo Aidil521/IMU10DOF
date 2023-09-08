@@ -60,7 +60,7 @@ uint8_t IMUSensor::readByte(uint8_t add, uint8_t reg) {
   wire->endTransmission(false);
   wire->requestFrom(add, (uint8_t)1);
   int data = wire->read(); 
-	return data;
+  return data;
 }
 
 void IMUSensor::readMPU(uint8_t reg, int bitData) {
@@ -79,13 +79,13 @@ void IMUSensor::readQMC(uint8_t reg, int bitData) {
 
 void IMUSensor::readBMP(uint8_t reg, uint8_t* data, int16_t bitData) {
   wire->beginTransmission(BMP280_ADDR);          
-	wire->write(reg);                   
-	wire->endTransmission(false); 
-	uint8_t i = 0;
-	wire->requestFrom(BMP280_ADDR, bitData);
-	while (wire->available()) {
-		data[i++] = wire->read();
-	}
+  wire->write(reg);                   
+  wire->endTransmission(false); 
+  uint8_t i = 0;
+  wire->requestFrom(BMP280_ADDR, bitData);
+  while (wire->available()) {
+    data[i++] = wire->read();
+  }
 }
 
 static float wrap(float angle,float limit){
@@ -228,16 +228,16 @@ void IMUSensor::calcDataQMC() {
   for(uint8_t i = 0; i < 3; i++){
     rawMG[i] = (int)(int16_t)(wire->read() | wire->read() << 8);
   }
-	float a = (atan2(rawMG[1], rawMG[0]) * RAD_2_DEG) + _declination;
-	Azimuth = a < 0 ? 360 + a : a;
-	Heading = wrap(a - startHeading, 180);
+  float a = (atan2(rawMG[1], rawMG[0]) * RAD_2_DEG) + _declination;
+  Azimuth = a < 0 ? 360 + a : a;
+  Heading = wrap(a - startHeading, 180);
 }
 
 void IMUSensor::calcDataBMP() {  
   uint8_t data[6];
   readBMP(BMP280_PRES_MSB, data, 6);
   int32_t adcTemp = (int32_t)data[3] << 12 | (int32_t)data[4] << 4 | (int32_t)data[5] >> 4; 
-	int32_t adcPres = (int32_t)data[0] << 12 | (int32_t)data[1] << 4 | (int32_t)data[2] >> 4;
+  int32_t adcPres = (int32_t)data[0] << 12 | (int32_t)data[1] << 4 | (int32_t)data[2] >> 4;
 
   int32_t vaT1 = ((((adcTemp >> 3) - ((int32_t)params.dig_T1 << 1))) * ((int32_t)params.dig_T2)) >> 11;
   int32_t vaT2 = (((((adcTemp >> 4) - ((int32_t)params.dig_T1)) * ((adcTemp >> 4) - ((int32_t)params.dig_T1))) >> 12) * ((int32_t)params.dig_T3)) >> 14;
