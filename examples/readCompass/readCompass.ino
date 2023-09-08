@@ -7,7 +7,7 @@ void setup() {
   IMU.begin();
   //setting your location with value magnetic declination
   //Link view your declination https://www.magnetic-declination.com/
-  IMU.setDeclination(0, 15); // example The magnetic declination is: +0º 15'
+  IMU.setDeclination(0, 15, 'E'); // example The magnetic declination is: +0º 15'
   IMU.calcOffsets();
 }
 

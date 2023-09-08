@@ -5,7 +5,7 @@ uint32_t oldT;
 void setup() {
   Serial.begin(115200);
   IMU.begin();
-  IMU.setDeclination(0, 15);
+  IMU.setDeclination(0, 15, 'E');
   IMU.setGyroOffsets(-2.08, 0.51, -0.15);
   IMU.setAccOffsets(0.06, -0.02, -0.08);
   IMU.calcOffsets(false);
