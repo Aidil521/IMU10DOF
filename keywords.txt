@@ -25,7 +25,7 @@ getAccZoffset	KEYWORD2
 getAngleX	KEYWORD2
 getAngleY	KEYWORD2
 getAngleZ	KEYWORD2
-getTemperature		KEYWORD2
+getTemperature	KEYWORD2
 
 getAzimuth	KEYWORD2
 getHeading	KEYWORD2
