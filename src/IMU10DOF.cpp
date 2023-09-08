@@ -184,13 +184,6 @@ void IMUSensor::update(){
   this->calcDataBMP();
 }
 
-/* Wrap an angle in the range [-limit,+limit] (special thanks to Edgar Bonet!) */
-// float wrap(float angle,float limit){
-//   while (angle >  limit) angle -= 2*limit;
-//   while (angle < -limit) angle += 2*limit;
-//   return angle;
-// }
-
 void IMUSensor::calcDataMPU() {  // reference https://github.com/rfetick/MPU6050_light.git
   // retrieve raw data
   int16_t rawAG[7]; // [ax,ay,az,temp,gx,gy,gz]
