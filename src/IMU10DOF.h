@@ -34,14 +34,16 @@
 #define TEMP_LSB_2_DEGREE             340.0f    // [bit/celsius]
 #define TEMP_LSB_OFFSET               12412.0f  
 
-class IMUSensor{
-  public:
+class IMUSensor {
+    public:
     // INIT and BASIC FUNCTIONS
 	IMUSensor(TwoWire &w = Wire);
     void begin();
-    void setDeclination(int16_t degree, uint8_t minute);
+    void setDeclination(int16_t degree, uint8_t minute, char dir);
     void setGyroOffsets(float x, float y, float z);
 	void setAccOffsets(float x, float y, float z);
+    void setFilter(float angle = 0.001f, float bias = 0.003f, float mea = 0.03f);
+    float Filter(float newValue, float newRate, float dt, uint8_t ar);
 	void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
 
     // Call variabel used for calibration sensor MPU6050
@@ -59,30 +61,36 @@ class IMUSensor{
     float getAzimuth(){ return Azimuth;};
     float getHeading(){ return Heading;};
     float getAltitude(){ return Altitude;};
-    float getTemp(){ return temp / 1.3;};
-    float getPressure(){ return Pressure;}
+    float getPressure(){ return Pressure;};
+    float getTemperature(){ return temp / 1.14;};
 
     // Call function for update value measurement IMU Sensors
     void update();
 
-  private:
+    private:
+    // float KalmanFilter(float _newAngle, float _newRate);
+    TwoWire *wire;
 	void calcDataMPU(); // user should better call function for update measurement sensors MPU6050
-	void calcDataQMC(); // user should better call function for update measurement sensors MPU6050 
-	void calcDataBMP(); // user should better call function for update measurement sensors MPU6050
-	uint8_t writeData(uint8_t add, uint8_t reg, uint8_t data);
-    uint8_t readByte(uint8_t add, uint8_t reg);
+	void calcDataQMC(); // user should better call function for update measurement sensors QMC5883L 
+	void calcDataBMP(); // user should better call function for update measurement sensors BMP280
     void readMPU(uint8_t reg, int bitData);
     void readQMC(uint8_t reg, int bitData);
     void readBMP(uint8_t reg, uint8_t* data, int16_t bitData);
-    TwoWire *wire;
+	uint8_t writeByte(uint8_t add, uint8_t reg, uint8_t data);
+    uint8_t readByte(uint8_t add, uint8_t reg);
 	float gyro_lsb_to_degsec, acc_lsb_to_g;
-    float gyroXoffset, gyroYoffset, gyroZoffset, filterGyroCoef;;
+    float gyroXoffset, gyroYoffset, gyroZoffset, filterGyroCoef;
 	float accXoffset, accYoffset, accZoffset;
     float temp, accX, accY, accZ, gyroX, gyroY, gyroZ;
     float angleAccX, angleAccY, angleX, angleY, angleZ;
     uint32_t preInterval;
-    float Azimuth, Heading, startHeading, _declination;
+    float Azimuth, Heading, _declination, startHeading;
     float TempB, Pressure, Altitude, startAltitude;
+	float Q_angle, Q_bias, R_measure;
+	float K_angle[2], K_bias[2], K_rate[2], Sum[2], err[2];
+	float P[4][2], K[2][2];
+	float _err_measure, _err_estimate, _q;
+	float _last_estimate = 0;
     struct {
         uint16_t dig_T1;
         int16_t  dig_T2;

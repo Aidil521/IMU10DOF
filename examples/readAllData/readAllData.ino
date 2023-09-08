@@ -6,9 +6,9 @@ void setup() {
   Serial.begin(115200);
   IMU.begin();
   IMU.setDeclination(0, 15);
-  IMU.setGyroOffsets(-1.48, 0.28, -0.21);
-  IMU.setAccOffsets(0.05, -0.03, -0.07);
-  IMU.calcOffsets();
+  IMU.setGyroOffsets(-2.08, 0.51, -0.15);
+  IMU.setAccOffsets(0.06, -0.02, -0.08);
+  IMU.calcOffsets(false);
 }
 
 void loop() {
@@ -23,8 +23,8 @@ void loop() {
     Serial.println("Heading  : " + String(IMU.getHeading()));
     Serial.println("Compass  : " + String(IMU.getAzimuth()));
     Serial.println("Altitude : " + String(IMU.getAltitude()));
-    Serial.println("Temp     : " + String(IMU.getTemp()));
     Serial.println("Pressure : " + String(IMU.getPressure()));
+    Serial.println("Temp     : " + String(IMU.getTemperature()));
     Serial.println();
   }
 }
