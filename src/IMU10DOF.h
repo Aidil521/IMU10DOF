@@ -42,8 +42,6 @@ class IMUSensor {
     void setDeclination(int16_t degree, uint8_t minute, char dir);
     void setGyroOffsets(float x, float y, float z);
 	void setAccOffsets(float x, float y, float z);
-    // void setFilter(float angle = 0.001f, float bias = 0.003f, float mea = 0.03f);
-    // float Filter(float newValue, float newRate, float dt, uint8_t ar);
 	void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
 
     // Call variabel used for calibration sensor MPU6050
@@ -67,8 +65,6 @@ class IMUSensor {
     // Call function for update value measurement IMU Sensors
     void update();
 
-	bool upsideDownMounting = false;
-
     private:
     TwoWire *wire;
 	void calcDataMPU(); // user should better call function for update measurement sensors MPU6050
@@ -82,13 +78,11 @@ class IMUSensor {
     float gyroXoffset, gyroYoffset, gyroZoffset;
 	float accXoffset, accYoffset, accZoffset;
     float temp, accX, accY, accZ, gyroX, gyroY, gyroZ;
+    float gyroXfilter, gyroYfilter, gyroZfilter;
     float angleAccX, angleAccY, angleX, angleY, angleZ;
     uint32_t preInterval;
     float Azimuth, Heading, _declination, startHeading;
     float TempB, Pressure, Altitude, startAltitude;
-	// float Q_angle, Q_bias, R_measure;
-	// float K_angle[3], K_bias[3], K_rate[3], Sum[3], err[3];
-	// float P[4][3], K[2][3];
     struct {
         uint16_t dig_T1;
         int16_t  dig_T2;
