@@ -42,9 +42,9 @@ class IMUSensor {
     // INIT and BASIC FUNCTIONS
 	IMUSensor(TwoWire &w = Wire);
     void begin();
-    void setDeclination(int16_t degree, uint8_t minute, char dir);
     void setGyroOffsets(float x, float y, float z);
 	void setAccOffsets(float x, float y, float z);
+    void setDeclination(int16_t degree, uint8_t minute, char dir);
 	void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
 
     // Call variabel used for calibration sensor MPU6050

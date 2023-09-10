@@ -2,7 +2,7 @@
   https://github.com/rfetick/MPU6050_light.git
   https://github.com/mprograms/QMC5883LCompass.git
   https://github.com/MartinL1/BMP280_DEV.git
- */
+*/
 
 #include "IMU10DOF.h"
 
@@ -12,8 +12,8 @@ float wrap(float angle, float limit){
   return angle;
 }
 
-float LPF(float newValue, float value) {
-  return (newValue * LPF_OFFSET) + ((1.0f - LPF_OFFSET) * value);
+float LPF(float value, float newValue) {
+  return (value * LPF_OFFSET) + ((1.0f - LPF_OFFSET) * newValue);
 }
 
 IMUSensor::IMUSensor(TwoWire &w){
@@ -54,48 +54,6 @@ void IMUSensor::begin(){
   preInterval = micros();
 }
 
-uint8_t IMUSensor::writeByte(uint8_t add, uint8_t reg, uint8_t data){
-  wire->beginTransmission(add);
-  wire->write(reg);
-  wire->write(data);
-  uint8_t status = wire->endTransmission();
-  return status; 
-}
-
-uint8_t IMUSensor::readByte(uint8_t add, uint8_t reg) {
-  wire->beginTransmission(add);
-  wire->write(reg);
-  wire->endTransmission(false);
-  wire->requestFrom(add, (uint8_t)1);
-  int data = wire->read(); 
-  return data;
-}
-
-void IMUSensor::readMPU(uint8_t reg, int bitData) {
-  wire->beginTransmission(MPU6050_ADDR);
-  wire->write(reg);
-  wire->endTransmission(false);
-  wire->requestFrom(MPU6050_ADDR, bitData);
-}
-
-void IMUSensor::readQMC(uint8_t reg, int bitData) {
-  wire->beginTransmission(QMC5883L_ADDR);
-  wire->write(reg);
-  wire->endTransmission();
-  wire->requestFrom(QMC5883L_ADDR, bitData);
-}
-
-void IMUSensor::readBMP(uint8_t reg, uint8_t* data, int16_t bitData) {
-  wire->beginTransmission(BMP280_ADDR);          
-  wire->write(reg);                   
-  wire->endTransmission(false); 
-  uint8_t i = 0;
-  wire->requestFrom(BMP280_ADDR, bitData);
-  while (wire->available()) {
-    data[i++] = wire->read();
-  }
-}
-
 void IMUSensor::setGyroOffsets(float x, float y, float z){
   gyroXoffset = x;
   gyroYoffset = y;
@@ -106,6 +64,17 @@ void IMUSensor::setAccOffsets(float x, float y, float z){
   accXoffset = x;
   accYoffset = y;
   accZoffset = z;
+}
+
+void IMUSensor::setDeclination(int16_t degree, uint8_t minute, char dir) {
+  switch (dir) {
+  case 'E':
+    _declination = (degree + minute) / 60;
+    break;
+  case 'W':
+    _declination = 0 - (degree + minute) / 60;
+    break;
+  }
 }
 
 void IMUSensor::calcOffsets(bool _offsetMPU, bool _offsetQMC, bool _offsetBMP) {
@@ -139,17 +108,6 @@ void IMUSensor::calcOffsets(bool _offsetMPU, bool _offsetQMC, bool _offsetBMP) {
     startAltitude = 0; 
     this->calcDataBMP(); 
     startAltitude = Altitude;
-  }
-}
-
-void IMUSensor::setDeclination(int16_t degree, uint8_t minute, char dir) {
-  switch (dir) {
-  case 'E':
-    _declination = (degree + minute) / 60;
-    break;
-  case 'W':
-    _declination = 0 - (degree + minute) / 60;
-    break;
   }
 }
 
@@ -202,10 +160,10 @@ void IMUSensor::calcDataQMC() {
 }
 
 void IMUSensor::calcDataBMP() {  
-  uint8_t data[6];
-  readBMP(BMP280_PRES_MSB, data, 6);
-  int32_t adcTemp = (int32_t)data[3] << 12 | (int32_t)data[4] << 4 | (int32_t)data[5] >> 4; 
-  int32_t adcPres = (int32_t)data[0] << 12 | (int32_t)data[1] << 4 | (int32_t)data[2] >> 4;
+  uint8_t rawBMP[6];
+  readBMP(BMP280_PRES_MSB, rawBMP, 6);
+  int32_t adcTemp = (int32_t)rawBMP[3] << 12 | (int32_t)rawBMP[4] << 4 | (int32_t)rawBMP[5] >> 4; 
+  int32_t adcPres = (int32_t)rawBMP[0] << 12 | (int32_t)rawBMP[1] << 4 | (int32_t)rawBMP[2] >> 4;
 
   int32_t vaT1 = ((((adcTemp >> 3) - ((int32_t)params.dig_T1 << 1))) * ((int32_t)params.dig_T2)) >> 11;
   int32_t vaT2 = (((((adcTemp >> 4) - ((int32_t)params.dig_T1)) * ((adcTemp >> 4) - ((int32_t)params.dig_T1))) >> 12) * ((int32_t)params.dig_T3)) >> 14;
@@ -227,6 +185,48 @@ void IMUSensor::calcDataBMP() {
   Pressure = p / 256.0f / 100.0f;
 
   Altitude = (Altitude * 0.98f) + (((((float)powf(1013.23f / Pressure, 0.190223f) - 1.0f) * (TempB + 273.15f) / 0.0065f) - startAltitude) * 0.02);
+}
+
+void IMUSensor::readMPU(uint8_t reg, int bitData) {
+  wire->beginTransmission(MPU6050_ADDR);
+  wire->write(reg);
+  wire->endTransmission(false);
+  wire->requestFrom(MPU6050_ADDR, bitData);
+}
+
+void IMUSensor::readQMC(uint8_t reg, int bitData) {
+  wire->beginTransmission(QMC5883L_ADDR);
+  wire->write(reg);
+  wire->endTransmission();
+  wire->requestFrom(QMC5883L_ADDR, bitData);
+}
+
+void IMUSensor::readBMP(uint8_t reg, uint8_t* data, int16_t bitData) {
+  wire->beginTransmission(BMP280_ADDR);          
+  wire->write(reg);                   
+  wire->endTransmission(false); 
+  uint8_t i = 0;
+  wire->requestFrom(BMP280_ADDR, bitData);
+  while (wire->available()) {
+    data[i++] = wire->read();
+  }
+}
+
+uint8_t IMUSensor::writeByte(uint8_t add, uint8_t reg, uint8_t data){
+  wire->beginTransmission(add);
+  wire->write(reg);
+  wire->write(data);
+  uint8_t status = wire->endTransmission();
+  return status; 
+}
+
+uint8_t IMUSensor::readByte(uint8_t add, uint8_t reg) {
+  wire->beginTransmission(add);
+  wire->write(reg);
+  wire->endTransmission(false);
+  wire->requestFrom(add, (uint8_t)1);
+  int data = wire->read(); 
+  return data;
 }
 
 IMUSensor IMU;
