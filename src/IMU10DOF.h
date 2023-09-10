@@ -31,9 +31,11 @@
 
 #define RAD_2_DEG                     57.29578f // [deg/rad]
 #define CALIB_OFFSET_NB_MES           200
+#define ACC_LSB_2_G                   4096.0f
+#define GYRO_LSB_2_DEG_SEC            65.5f
 #define TEMP_LSB_2_DEGREE             340.0f    // [bit/celsius]
 #define TEMP_LSB_OFFSET               36.53f//12412.0f 
-#define FILTER_OFFSET                 0.7f 
+#define LPF_OFFSET                    0.7f 
 
 class IMUSensor {
     public:
@@ -79,7 +81,7 @@ class IMUSensor {
     float gyroXoffset, gyroYoffset, gyroZoffset;
 	float accXoffset, accYoffset, accZoffset;
     float temp, accX, accY, accZ, gyroX, gyroY, gyroZ;
-    float gyroXfilter, gyroYfilter, gyroZfilter;
+    float angleGyroX, angleGyroY, angleGyroZ;
     float angleAccX, angleAccY, angleX, angleY, angleZ;
     uint32_t preInterval;
     float Azimuth, Heading, _declination, startHeading;

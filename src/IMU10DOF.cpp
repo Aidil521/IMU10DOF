@@ -6,6 +6,16 @@
 
 #include "IMU10DOF.h"
 
+float wrap(float angle, float limit){
+  while (angle >  limit) angle -= 2*limit;
+  while (angle < -limit) angle += 2*limit;
+  return angle;
+}
+
+float LPF(float newValue, float value) {
+  return (newValue * LPF_OFFSET) + ((1.0f - LPF_OFFSET) * value);
+}
+
 IMUSensor::IMUSensor(TwoWire &w){
   wire = &w;
   setGyroOffsets(0,0,0);
@@ -19,8 +29,8 @@ void IMUSensor::begin(){
   // Configuration MPU6050
   uint8_t statusMPU = writeByte(MPU6050_ADDR, MPU6050_PWR_MGMT_1_REGISTER, 0x01); 
   writeByte(MPU6050_ADDR, MPU6050_SMPLRT_DIV_REGISTER, 0x00);
-  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x08); //131.0f
-  writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x10); //16384.0f
+  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x08); //65.5f
+  writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x10); //4096.0f
   writeByte(MPU6050_ADDR, MPU6050_CONFIG_REGISTER, 0x03);
   delay(10);
 
@@ -150,16 +160,6 @@ void IMUSensor::update(){
   this->calcDataBMP();
 }
 
-float wrap(float angle,float limit){
-  while (angle >  limit) angle -= 360;
-  while (angle < -limit) angle += 360;
-  return angle;
-}
-
-float filter(float newValue, float value) {
-  return (newValue * FILTER_OFFSET) + ((1.0f - FILTER_OFFSET) * value);
-}
-
 void IMUSensor::calcDataMPU() {
   int16_t rawAG[7]; // [ax,ay,az,temp,gx,gy,gz]
   readMPU(MPU6050_ACCEL_OUT_REGISTER, 14);
@@ -167,26 +167,26 @@ void IMUSensor::calcDataMPU() {
     rawAG[i]  = wire->read() << 8 | wire->read();
   }
 
-  accX  = (float)rawAG[0] / 4096.0f - accXoffset;
-  accY  = (float)rawAG[1] / 4096.0f - accYoffset;
-  accZ  = (float)rawAG[2] / 4096.0f - accZoffset;
-  temp  = (float)rawAG[3] / TEMP_LSB_2_DEGREE + TEMP_LSB_OFFSET;
-  gyroX = (float)rawAG[4] / 65.5f - gyroXoffset;
-  gyroY = (float)rawAG[5] / 65.5f - gyroYoffset;
-  gyroZ = (float)rawAG[6] / 65.5f - gyroZoffset;
+  accX  = ((float)rawAG[0] / ACC_LSB_2_G) - accXoffset;
+  accY  = ((float)rawAG[1] / ACC_LSB_2_G) - accYoffset;
+  accZ  = ((float)rawAG[2] / ACC_LSB_2_G) - accZoffset;
+  temp  = ((float)rawAG[3] / TEMP_LSB_2_DEGREE) + TEMP_LSB_OFFSET;
+  gyroX = ((float)rawAG[4] / GYRO_LSB_2_DEG_SEC) - gyroXoffset;
+  gyroY = ((float)rawAG[5] / GYRO_LSB_2_DEG_SEC) - gyroYoffset;
+  gyroZ = ((float)rawAG[6] / GYRO_LSB_2_DEG_SEC) - gyroZoffset;
   
-  float sgZ = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
-  angleAccX   = filter(angleAccX, (atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG)); // [-180, +180] deg
-  angleAccY   = filter(angleAccY, (-atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG)); // [-180, +180] deg
-  gyroXfilter = filter(gyroXfilter, gyroX);
-  gyroYfilter = filter(gyroYfilter, gyroY);
-  gyroZfilter = filter(gyroZfilter, gyroZ);
+  float sgZ  = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
+  angleAccX  = LPF(angleAccX, (atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG)); // [-180, +180] deg
+  angleAccY  = LPF(angleAccY, (-atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG)); // [-180, +180] deg
+  angleGyroX = LPF(angleGyroX, gyroX);
+  angleGyroY = LPF(angleGyroY, gyroY);
+  angleGyroZ = LPF(angleGyroZ, gyroZ);
 
   // estimate tilt angles: this is an approximation for small angles!
   float _dt = (micros() - preInterval) * 1e-6f;
-  angleX = wrap((0.28f + FILTER_OFFSET) * (angleAccX + wrap(angleX + gyroXfilter * _dt - angleAccX, 180)) + (1.0f - (0.28f + FILTER_OFFSET)) * angleAccX, 180);
-  angleY = wrap((0.28f + FILTER_OFFSET) * (angleAccY + wrap(angleY + gyroYfilter * _dt - angleAccY, 180)) + (1.0f - (0.28f + FILTER_OFFSET)) * angleAccY, 180);
-  angleZ = wrap((0.28f + FILTER_OFFSET) * (Heading   + wrap(angleZ + gyroZfilter * _dt - Heading,   180)) + (1.0f - (0.28f + FILTER_OFFSET)) * Heading,   180);
+  angleX = wrap((0.28f + LPF_OFFSET) * (angleAccX + wrap(angleX + angleGyroX * _dt - angleAccX, 180)) + (1.0f - (0.28f + LPF_OFFSET)) * angleAccX, 180);
+  angleY = wrap((0.28f + LPF_OFFSET) * (angleAccY + wrap(angleY + angleGyroY * _dt - angleAccY, 180)) + (1.0f - (0.28f + LPF_OFFSET)) * angleAccY, 180);
+  angleZ = wrap((0.28f + LPF_OFFSET) * (Heading   + wrap(angleZ + angleGyroZ * _dt - Heading,   180)) + (1.0f - (0.28f + LPF_OFFSET)) * Heading,   180);
   preInterval = micros();
 }
 
