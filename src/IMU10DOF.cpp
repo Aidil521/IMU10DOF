@@ -157,7 +157,7 @@ float wrap(float angle,float limit){
 }
 
 float filter(float newValue, float value) {
-  return (newValue * FILTER_OFFSETS) + ((1.0f - FILTER_OFFSETS) * value);
+  return (newValue * FILTER_OFFSET) + ((1.0f - FILTER_OFFSET) * value);
 }
 
 void IMUSensor::calcDataMPU() {
@@ -167,26 +167,26 @@ void IMUSensor::calcDataMPU() {
     rawAG[i]  = wire->read() << 8 | wire->read();
   }
 
-  accX  = ((float)rawAG[0]) / 4096.0f - accXoffset;
-  accY  = ((float)rawAG[1]) / 4096.0f - accYoffset;
-  accZ  = ((float)rawAG[2]) / 4096.0f - accZoffset;
-  temp  = (rawAG[3] / TEMP_LSB_2_DEGREE) + TEMP_LSB_OFFSET;
-  gyroX = ((float)rawAG[4]) / 65.5f - gyroXoffset;
-  gyroY = ((float)rawAG[5]) / 65.5f - gyroYoffset;
-  gyroZ = ((float)rawAG[6]) / 65.5f - gyroZoffset;
+  accX  = (float)rawAG[0] / 4096.0f - accXoffset;
+  accY  = (float)rawAG[1] / 4096.0f - accYoffset;
+  accZ  = (float)rawAG[2] / 4096.0f - accZoffset;
+  temp  = (float)rawAG[3] / TEMP_LSB_2_DEGREE + TEMP_LSB_OFFSET;
+  gyroX = (float)rawAG[4] / 65.5f - gyroXoffset;
+  gyroY = (float)rawAG[5] / 65.5f - gyroYoffset;
+  gyroZ = (float)rawAG[6] / 65.5f - gyroZoffset;
   
   float sgZ = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
-  angleAccX = filter(angleAccX, (atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG)); // [-180, +180] deg
-  angleAccY = filter(angleAccY, (-atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG)); // [-180, +180] deg
+  angleAccX   = filter(angleAccX, (atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG)); // [-180, +180] deg
+  angleAccY   = filter(angleAccY, (-atan2(accX, sgZ*sqrt(accZ*accZ + accY*accY)) * RAD_2_DEG)); // [-180, +180] deg
   gyroXfilter = filter(gyroXfilter, gyroX);
   gyroYfilter = filter(gyroYfilter, gyroY);
   gyroZfilter = filter(gyroZfilter, gyroZ);
 
   // estimate tilt angles: this is an approximation for small angles!
   float _dt = (micros() - preInterval) * 1e-6f;
-  angleX = wrap(0.98f * (angleAccX + wrap(angleX + gyroXfilter * _dt - angleAccX, 180)) + 0.02f * angleAccX, 180);
-  angleY = wrap(0.98f * (angleAccY + wrap(angleY + gyroYfilter * _dt - angleAccY, 180)) + 0.02f * angleAccY, 180);
-  angleZ = wrap(0.98f * (Heading   + wrap(angleZ + gyroZfilter * _dt - Heading,   180)) + 0.02f * Heading,   180);
+  angleX = wrap((0.28f + FILTER_OFFSET) * (angleAccX + wrap(angleX + gyroXfilter * _dt - angleAccX, 180)) + (1.0f - (0.28f + FILTER_OFFSET)) * angleAccX, 180);
+  angleY = wrap((0.28f + FILTER_OFFSET) * (angleAccY + wrap(angleY + gyroYfilter * _dt - angleAccY, 180)) + (1.0f - (0.28f + FILTER_OFFSET)) * angleAccY, 180);
+  angleZ = wrap((0.28f + FILTER_OFFSET) * (Heading   + wrap(angleZ + gyroZfilter * _dt - Heading,   180)) + (1.0f - (0.28f + FILTER_OFFSET)) * Heading,   180);
   preInterval = micros();
 }
 

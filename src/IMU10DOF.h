@@ -33,7 +33,7 @@
 #define CALIB_OFFSET_NB_MES           200
 #define TEMP_LSB_2_DEGREE             340.0f    // [bit/celsius]
 #define TEMP_LSB_OFFSET               36.53f//12412.0f 
-#define FILTER_OFFSETS                0.7f 
+#define FILTER_OFFSET                 0.7f 
 
 class IMUSensor {
     public:
