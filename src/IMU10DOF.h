@@ -83,9 +83,9 @@ class IMUSensor {
     float temp, accX, accY, accZ, gyroX, gyroY, gyroZ;
     float angleGyroX, angleGyroY, angleGyroZ;
     float angleAccX, angleAccY, angleX, angleY, angleZ;
-    uint32_t preInterval;
     float Azimuth, Heading, _declination, startHeading;
     float TempB, Pressure, Altitude, startAltitude;
+    uint32_t preInterval;
     struct {
         uint16_t dig_T1;
         int16_t  dig_T2;

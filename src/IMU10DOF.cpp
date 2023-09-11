@@ -29,7 +29,7 @@ void IMUSensor::begin(){
   // Configuration MPU6050
   uint8_t statusMPU = writeByte(MPU6050_ADDR, MPU6050_PWR_MGMT_1_REGISTER, 0x01); 
   writeByte(MPU6050_ADDR, MPU6050_SMPLRT_DIV_REGISTER, 0x00);
-  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x08); //65.5f
+  writeByte(MPU6050_ADDR, MPU6050_GYRO_CONFIG_REGISTER, 0x08);  //65.5f
   writeByte(MPU6050_ADDR, MPU6050_ACCEL_CONFIG_REGISTER, 0x10); //4096.0f
   writeByte(MPU6050_ADDR, MPU6050_CONFIG_REGISTER, 0x03);
   delay(10);
@@ -125,13 +125,13 @@ void IMUSensor::calcDataMPU() {
     rawAG[i]  = wire->read() << 8 | wire->read();
   }
 
-  accX  = ((float)rawAG[0] / ACC_LSB_2_G) - accXoffset;
-  accY  = ((float)rawAG[1] / ACC_LSB_2_G) - accYoffset;
-  accZ  = ((float)rawAG[2] / ACC_LSB_2_G) - accZoffset;
-  temp  = ((float)rawAG[3] / TEMP_LSB_2_DEGREE) + TEMP_LSB_OFFSET;
-  gyroX = ((float)rawAG[4] / GYRO_LSB_2_DEG_SEC) - gyroXoffset;
-  gyroY = ((float)rawAG[5] / GYRO_LSB_2_DEG_SEC) - gyroYoffset;
-  gyroZ = ((float)rawAG[6] / GYRO_LSB_2_DEG_SEC) - gyroZoffset;
+  accX  = LPF(accX,  ((float)rawAG[0] / ACC_LSB_2_G) - accXoffset);
+  accY  = LPF(accY,  ((float)rawAG[1] / ACC_LSB_2_G) - accYoffset);
+  accZ  = LPF(accZ,  ((float)rawAG[2] / ACC_LSB_2_G) - accZoffset);
+  temp  = LPF(temp,  ((float)rawAG[3] / TEMP_LSB_2_DEGREE) + TEMP_LSB_OFFSET);
+  gyroX = LPF(gyroX, ((float)rawAG[4] / GYRO_LSB_2_DEG_SEC) - gyroXoffset);
+  gyroY = LPF(gyroY, ((float)rawAG[5] / GYRO_LSB_2_DEG_SEC) - gyroYoffset);
+  gyroZ = LPF(gyroZ, ((float)rawAG[6] / GYRO_LSB_2_DEG_SEC) - gyroZoffset);
   
   float sgZ  = accZ < 0 ? -1 : 1; // allow one angle to go from -180 to +180 degrees
   angleAccX  = LPF(angleAccX, (atan2(accY, sgZ*sqrt(accZ*accZ + accX*accX)) * RAD_2_DEG)); // [-180, +180] deg
