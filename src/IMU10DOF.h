@@ -34,7 +34,7 @@
 #define ACC_LSB_2_G                   4096.0f
 #define GYRO_LSB_2_DEG_SEC            65.5f
 #define TEMP_LSB_2_DEGREE             340.0f    // [bit/celsius]
-#define TEMP_LSB_OFFSET               36.53f//12412.0f 
+#define TEMP_LSB_OFFSET               36.53f  
 #define LPF_OFFSET                    0.7f 
 
 class IMUSensor {
