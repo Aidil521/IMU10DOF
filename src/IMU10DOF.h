@@ -6,7 +6,7 @@
 
 #define MPU6050_ADDR                  0x68
 #define QMC5883L_ADDR                 0x0D
-#define BMP280_ADDR          		  0x76
+#define BMP280_ADDR          	      0x76
 
 #define MPU6050_SMPLRT_DIV_REGISTER   0x19
 #define MPU6050_CONFIG_REGISTER       0x1a
@@ -21,13 +21,13 @@
 #define MPU6050_GYRO_OUT_REGISTER     0x43
 #define MPU6050_ACCEL_OUT_REGISTER    0x3B
 #define QMC5883L_OUT_REGISTER         0x00
-#define BMP280_PRES_MSB    		      0xF7
+#define BMP280_PRES_MSB    	      0xF7
 
-#define BMP280_TRIM_PARAMS		      0x88
-#define BMP280_RESET 			      0xE0
-#define BMP280_MDICE_ID 		      0xD0
-#define DEVICE_ID 					  0x58
-#define RESET_CODE					  0xB6
+#define BMP280_TRIM_PARAMS	      0x88
+#define BMP280_RESET 		      0xE0
+#define BMP280_MDICE_ID 	      0xD0
+#define DEVICE_ID 		      0x58
+#define RESET_CODE		      0xB6
 
 #define RAD_2_DEG                     57.29578f // [deg/rad]
 #define CALIB_OFFSET_NB_MES           200
@@ -40,20 +40,20 @@
 class IMUSensor {
     public:
     // INIT and BASIC FUNCTIONS
-	IMUSensor(TwoWire &w = Wire);
+    IMUSensor(TwoWire &w = Wire);
     void begin();
     void setGyroOffsets(float x, float y, float z);
-	void setAccOffsets(float x, float y, float z);
+    void setAccOffsets(float x, float y, float z);
     void setDeclination(int16_t degree, uint8_t minute, char dir);
-	void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
+    void calcOffsets(bool _offsetMPU = true, bool _offsetQMC = true, bool _offsetBMP = true);
 
     // Call variabel used for calibration sensor MPU6050
-	float getGyroXoffset(){ return gyroXoffset; };
+    float getGyroXoffset(){ return gyroXoffset; };
     float getGyroYoffset(){ return gyroYoffset; };
     float getGyroZoffset(){ return gyroZoffset; };
-	float getAccXoffset(){ return accXoffset; };
-	float getAccYoffset(){ return accYoffset; };
-	float getAccZoffset(){ return accZoffset; };
+    float getAccXoffset(){ return accXoffset; };
+    float getAccYoffset(){ return accYoffset; };
+    float getAccZoffset(){ return accZoffset; };
 
     //Call variabel for value measurement
     float getAngleX(){ return angleX; };
@@ -70,16 +70,16 @@ class IMUSensor {
 
     private:
     TwoWire *wire;
-	void calcDataMPU(); // user should better call function for update measurement sensors MPU6050
-	void calcDataQMC(); // user should better call function for update measurement sensors QMC5883L 
-	void calcDataBMP(); // user should better call function for update measurement sensors BMP280
+    void calcDataMPU(); // user should better call function for update measurement sensors MPU6050
+    void calcDataQMC(); // user should better call function for update measurement sensors QMC5883L 
+    void calcDataBMP(); // user should better call function for update measurement sensors BMP280
     void readMPU(uint8_t reg, int bitData);
     void readQMC(uint8_t reg, int bitData);
     void readBMP(uint8_t reg, uint8_t* data, int16_t bitData);
-	uint8_t writeByte(uint8_t add, uint8_t reg, uint8_t data);
+    uint8_t writeByte(uint8_t add, uint8_t reg, uint8_t data);
     uint8_t readByte(uint8_t add, uint8_t reg);
     float gyroXoffset, gyroYoffset, gyroZoffset;
-	float accXoffset, accYoffset, accZoffset;
+    float accXoffset, accYoffset, accZoffset;
     float temp, accX, accY, accZ, gyroX, gyroY, gyroZ;
     float angleGyroX, angleGyroY, angleGyroZ;
     float angleAccX, angleAccY, angleX, angleY, angleZ;
@@ -99,7 +99,7 @@ class IMUSensor {
         int16_t  dig_P7;
         int16_t  dig_P8;
         int16_t  dig_P9;
-	} params;
+   } params;
 };
 
 extern IMUSensor IMU;
