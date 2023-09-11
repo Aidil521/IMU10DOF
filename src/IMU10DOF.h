@@ -21,13 +21,13 @@
 #define MPU6050_GYRO_OUT_REGISTER     0x43
 #define MPU6050_ACCEL_OUT_REGISTER    0x3B
 #define QMC5883L_OUT_REGISTER         0x00
-#define BMP280_PRES_MSB    	          0xF7
+#define BMP280_PRES_MSB               0xF7
 
-#define BMP280_TRIM_PARAMS	          0x88
-#define BMP280_RESET 		          0xE0
-#define BMP280_MDICE_ID 	          0xD0
-#define DEVICE_ID 		              0x58
-#define RESET_CODE		              0xB6
+#define BMP280_TRIM_PARAMS            0x88
+#define BMP280_RESET                  0xE0
+#define BMP280_MDICE_ID               0xD0
+#define DEVICE_ID                     0x58
+#define RESET_CODE                    0xB6
 
 #define RAD_2_DEG                     57.29578f // [deg/rad]
 #define CALIB_OFFSET_NB_MES           200
